@@ -1,0 +1,12 @@
+#ifndef WRITER_H
+#define WRITER_H
+
+typedef struct tm tm;
+
+char* QueryString(float obj_temp, float sink_temp, float target_temp,
+		  float baseplate_temp, float out_current, float out_voltage,
+		  float in_voltage);
+
+void WriteToCSV(char* str);
+
+#endif 

@@ -1,0 +1,85 @@
+
+/*===============================================================================*/
+/*                             IMPORT                                            */
+/*===============================================================================*/
+
+#include <stdio.h>
+#include <string.h>
+#include "ConsoleIO.h"
+#include "ComPort/ComPort.h"
+#include "MeComAPI/MeCom.h"
+#include "PeriodicWrite.h"
+#include "writer.h"
+#include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+/*===============================================================================*/
+/*                             MACROS                                            */
+/*===============================================================================*/
+#define WAITTIME 5
+#define ONESECOND 999999
+
+/*===============================================================================*/
+/*                             GLOBALS                                           */
+/*===============================================================================*/
+
+const char* _data_file = "History.csv";
+
+const char* _csv_header = "Month,Day,Year,Hour,Minute,Second,ObjectTemp, SinkTemp\n";
+
+/*===============================================================================*/
+/*                              BODY                                             */
+/*===============================================================================*/
+
+
+
+int main()
+{
+
+  /* Initialize History.tsv if it doesn't already exist*/
+  if (access(_data_file, F_OK) == -1){
+    FILE *fp = fopen(_data_file, "ab+");
+    fclose(fp);
+  }
+
+  /* If the file's empty, put the header at the top*/
+  struct stat st;
+  unsigned long long datasize = 1;
+  if (stat(_data_file, &st) == 0)
+     datasize = (unsigned long long)st.st_size;
+  if (!datasize){
+    FILE* fp2 = fopen(_data_file, "a");
+    fputs(_csv_header,fp2);
+    fclose(fp2);
+   }
+  
+  /*ComPort_Open(ComPort number, ComPort Speed (baud rate))*/
+  /*Find ComPort number with $ls /dev */
+  ComPort_Open(0,57600);
+
+  MeParLongFields lFields;
+  MeParFloatFields fFields;
+
+
+  
+  int32_t Address = 0;
+  int32_t Inst = 1;
+  tm * TimeInfo;
+
+      // Get TEC Object Temperature//
+      float obj_temp = 999999; //indicates an error
+      if (MeCom_TEC_Mon_ObjectTemperature(Address, Inst, &fFields, MeGet)){
+         obj_temp = fFields.Value;
+      }      
+     
+     //Get Sink Temperature //
+      float sink_temp = 999999; //indicates an error 
+     if (MeCom_TEC_Mon_SinkTemperature(Address, Inst, &fFields, MeGet)){
+          sink_temp = fFields.Value;
+         //printf("The sink temperature is: %f\n", sink_temp);
+     }
+
+     while(1){
+       WritePeriodically(WAITTIME,TimeInfo,obj_temp, sink_temp);
+    }
+}

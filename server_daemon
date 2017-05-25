@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# A simple wrapper in case ucirc_server seg-faults 
+
+while :
+do
+	./ucirc_server
+	sleep 1
+done
