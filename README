@@ -1,0 +1,30 @@
+                       +------------------------------+
+                       |     Mikhail Rezazadeh        |
+                       |       March 2017             |
+                       |  NASA SuperPressure Balloon  |
+                       |     Project in New Zealand   |
+                       +------------------------------+
+
+
+This is a TCP Server running on port 9999, intended to support 
+a fixed IP address on a local network (192.168.1.22). The purpose 
+is to response to ASCII text commands sent from the ground to the 
+balloon at 100,000 ft using NASA telemetry. Once the main payload 
+computer (192.168.1.20) receives the text command, it enters the 
+SYN SENT state and initiates a comnnection with the computer 
+running this program, which is in the LISTEN state. 
+
+The text is then sent to a dispatch table (src/server/handler.c) 
+where the computer reacts to it (for example by changing the temperature 
+of the thermocontroller, or by altering the image capture rate of the 
+infrared cameras). 
+
+For "Set" commands, a "*" is sent back to 192.168.1.20 upon success, 
+and "?" upon failure. For query commands, an ASCII string is returned
+and the connection is immediately closed. 
+
+This server detaches threads as soon as the TCP "ESTABLISHED" state is 
+achieved, so it can theoretically make up to 16,384 connections (the 
+maximum number of threads for Ubuntu 14.04 LTS). 
+
+The server_daemon is a wrapper to avoid any unexpected  
